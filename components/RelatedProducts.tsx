@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { useCart } from "@/contexts/CartContext"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
+import { useAuth } from "@/contexts/AuthContext"
+import { useRouter } from "next/navigation"
 
 interface Product {
   id: string
@@ -84,6 +86,8 @@ export default function RelatedProducts({ currentProductId, category }: RelatedP
   const [wishlist, setWishlist] = useState<Set<string>>(new Set())
   const { addItem } = useCart()
   const { toast } = useToast()
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
     // Filter products by category and exclude current product
@@ -93,6 +97,17 @@ export default function RelatedProducts({ currentProductId, category }: RelatedP
   }, [currentProductId, category])
 
   const handleAddToCart = (product: Product) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to add items to your cart.",
+        variant: "destructive",
+      })
+      router.push("/login")
+      return
+    }
+
     if (!product.inStock) {
       toast({
         title: "Out of Stock",
@@ -107,6 +122,7 @@ export default function RelatedProducts({ currentProductId, category }: RelatedP
       name: product.name,
       price: product.price,
       image: product.image,
+      quantity: 1,
     })
 
     toast({
@@ -258,4 +274,4 @@ export default function RelatedProducts({ currentProductId, category }: RelatedP
       </div>
     </motion.div>
   )
-}
+      }
