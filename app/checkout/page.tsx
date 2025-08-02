@@ -18,25 +18,25 @@ const paymentMethods = [
     id: "nayapay",
     name: "NayaPay",
     icon: Smartphone,
-    description: "Quick digital payment",
+    description: "Pay with your NayaPay account",
   },
   {
     id: "jazzcash",
     name: "JazzCash",
     icon: Smartphone,
-    description: "Mobile wallet payment",
+    description: "Pay via NayaPay (Details inside)",
   },
   {
     id: "easypaisa",
     name: "EasyPaisa",
     icon: Smartphone,
-    description: "Digital wallet service",
+    description: "Pay via NayaPay (Details inside)",
   },
   {
     id: "bank",
     name: "Bank Transfer",
     icon: Building,
-    description: "Direct bank transfer",
+    description: "Transfer to our NayaPay account",
   },
   {
     id: "cod",
@@ -237,14 +237,17 @@ export default function CheckoutPage() {
                 </RadioGroup>
 
                 {/* Payment Details */}
-                {selectedPayment === "nayapay" && (
+                {(selectedPayment === "nayapay" ||
+                  selectedPayment === "jazzcash" ||
+                  selectedPayment === "easypaisa" ||
+                  selectedPayment === "bank") && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     transition={{ duration: 0.3 }}
                     className="mt-4 p-4 glass rounded-lg"
                   >
-                    <h3 className="text-white font-medium mb-2">NayaPay Payment Details</h3>
+                    <h3 className="text-white font-medium mb-2">Online Payment Instructions</h3>
                     <p className="text-white/70 text-sm mb-2">Send payment to:</p>
                     <p className="text-white font-mono">salman.khan@naya</p>
                     <p className="text-white/60 text-sm mt-2">
@@ -314,4 +317,4 @@ export default function CheckoutPage() {
       </div>
     </div>
   )
-}
+                }
