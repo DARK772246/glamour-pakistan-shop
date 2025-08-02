@@ -8,19 +8,35 @@ import { mockProducts } from "@/data/products"
 import { useCart } from "@/contexts/CartContext"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
+import { useAuth } from "@/contexts/AuthContext"
+import { useRouter } from "next/navigation"
 
 export default function FeaturedProducts() {
   const { addItem } = useCart()
   const { toast } = useToast()
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
 
   const featuredProducts = mockProducts.filter((product) => product.isFeatured).slice(0, 6)
 
   const handleAddToCart = (product: any) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to add items to your cart.",
+        variant: "destructive",
+      })
+      router.push("/login")
+      return
+    }
+
     addItem({
       id: product.id.toString(),
       name: product.name,
       price: product.price,
       image: product.image,
+      quantity: 1
     })
 
     toast({
