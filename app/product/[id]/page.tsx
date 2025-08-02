@@ -1,7 +1,6 @@
 "use client"
 
 import { Label } from "@/components/ui/label"
-
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -29,6 +28,8 @@ import ReviewsSection from "@/components/ReviewsSection"
 import SizeChart from "@/components/SizeChart"
 import RelatedProducts from "@/components/RelatedProducts"
 import { useParams } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
+import { useRouter } from "next/navigation"
 
 // Mock product data - in real app, this would come from API
 const getProductById = (id: string) => {
@@ -133,9 +134,22 @@ export default function ProductPage() {
   const [show3DViewer, setShow3DViewer] = useState(false)
 
   const { addItem } = useCart()
+  const { isAuthenticated } = useAuth()
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleAddToCart = () => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to add items to your cart.",
+        variant: "destructive",
+      })
+      router.push("/login")
+      return
+    }
+
     if (!selectedSize) {
       toast({
         title: "Please select a size",
@@ -154,6 +168,7 @@ export default function ProductPage() {
         image: product.images[0],
         size: selectedSize,
         color: selectedColor,
+        quantity: 1, // Add one item at a time
       })
     }
 
@@ -596,4 +611,4 @@ export default function ProductPage() {
       </AnimatePresence>
     </div>
   )
-}
+      }
