@@ -2,6 +2,9 @@
 
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect } from "react"
+import { useAuth } from "./AuthContext" // Import useAuth
+import { useRouter } from "next/navigation" // Import useRouter
+import { useToast } from "@/hooks/use-toast" // Import useToast
 
 interface CartItem {
   id: string
@@ -29,7 +32,7 @@ type CartAction =
 const CartContext = createContext<{
   state: CartState
   dispatch: React.Dispatch<CartAction>
-  addItem: (item: Omit<CartItem, "quantity">) => void
+  addItem: (item: Omit<CartItem, "quantity"> & { quantity: number }) => void
   removeFromCart: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
   clearCart: () => void
@@ -48,14 +51,14 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       if (existingItem) {
         const updatedItems = state.items.map((item) =>
           item.id === action.payload.id && item.size === action.payload.size && item.color === action.payload.color
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + action.payload.quantity }
             : item,
         )
         const total = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
         return { items: updatedItems, total, itemCount }
       } else {
-        const newItem = { ...action.payload, quantity: 1 }
+        const newItem = { ...action.payload }
         const updatedItems = [...state.items, newItem]
         const total = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
@@ -97,7 +100,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     itemCount: 0,
   })
 
-  // Load cart from localStorage on mount
+  // --- NEW LOGIC TO CHECK AUTHENTICATION ---
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
+  const { toast } = useToast()
+  // --- END NEW LOGIC ---
+
   useEffect(() => {
     const savedCart = localStorage.getItem("glamour-cart")
     if (savedCart) {
@@ -110,14 +118,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("glamour-cart", JSON.stringify(state))
   }, [state])
 
-  const addItem = (item: Omit<CartItem, "quantity">) => {
-    dispatch({ type: "ADD_ITEM", payload: { ...item, quantity: 1 } })
+  // --- UPDATED addItem FUNCTION WITH CENTRALIZED CHECK ---
+  const addItem = (item: Omit<CartItem, "quantity"> & { quantity: number }) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to add items to your cart.",
+        variant: "destructive",
+      })
+      router.push("/login")
+      return // Stop the function here
+    }
+    dispatch({ type: "ADD_ITEM", payload: item })
   }
+  // --- END UPDATED FUNCTION ---
 
   const removeFromCart = (id: string) => {
     dispatch({ type: "REMOVE_ITEM", payload: id })
