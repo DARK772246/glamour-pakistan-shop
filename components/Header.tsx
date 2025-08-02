@@ -8,13 +8,17 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useCart } from "@/contexts/CartContext"
 import { useAuth } from "@/contexts/AuthContext"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 import SearchModal from "./SearchModal"
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const { itemCount } = useCart()
-  const { user, logout } = useAuth()
+  const { user, isAuthenticated, logout } = useAuth()
+  const router = useRouter()
+  const { toast } = useToast()
 
   const navItems = [
     { name: "Home", href: "/" },
@@ -23,6 +27,19 @@ export default function Header() {
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
   ]
+
+  const handleCartClick = () => {
+    if (isAuthenticated) {
+      router.push("/cart")
+    } else {
+      toast({
+        title: "Login Required",
+        description: "Please log in to view your cart.",
+        variant: "destructive",
+      })
+      router.push("/login")
+    }
+  }
 
   return (
     <>
@@ -63,16 +80,14 @@ export default function Header() {
               </Button>
 
               {/* Cart */}
-              <Link href="/cart">
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 relative">
-                  <ShoppingBag size={18} className="md:w-5 md:h-5" />
-                  {itemCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-4 md:min-w-[20px] md:h-5 flex items-center justify-center rounded-full">
-                      {itemCount}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
+              <Button onClick={handleCartClick} variant="ghost" size="icon" className="text-white hover:bg-white/10 relative">
+                <ShoppingBag size={18} className="md:w-5 md:h-5" />
+                {itemCount > 0 && (
+                  <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-4 md:min-w-[20px] md:h-5 flex items-center justify-center rounded-full">
+                    {itemCount}
+                  </Badge>
+                )}
+              </Button>
 
               {/* User Menu - Desktop Only */}
               <div className="relative group hidden md:block">
