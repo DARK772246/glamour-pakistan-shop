@@ -25,6 +25,8 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 // Mock data
 const mockStats = {
@@ -58,12 +60,70 @@ const mockProducts = [
   { id: 5, name: "Leather Khussas", category: "Footwear", price: 5500, stock: 0, status: "out_of_stock" },
 ]
 
+const AdminLogin = ({ onLogin, error }: { onLogin: (password: string) => void; error: string }) => {
+  const [password, setPassword] = useState("")
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onLogin(password)
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen product-bg">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <Card className="w-[350px] glass border-white/10">
+          <CardHeader>
+            <CardTitle className="text-white text-center">Admin Panel</CardTitle>
+            <CardDescription className="text-white/60 text-center">Please enter the password to continue</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              <div className="grid w-full items-center gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter admin password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="glass border-white/30 text-white"
+                  />
+                </div>
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+              </div>
+              <Button type="submit" className="w-full mt-6 primary-button">
+                Login
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  )
+}
+
 export default function AdminPanel() {
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false)
+  const [adminPassword, setAdminPassword] = useState("admin123")
+  const [loginError, setLoginError] = useState("")
   const [activeTab, setActiveTab] = useState("dashboard")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedStatus, setSelectedStatus] = useState("all")
   const { toast } = useToast()
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+
+  const handleAdminLogin = (password: string) => {
+    if (password === adminPassword) {
+      setIsAdminAuthenticated(true)
+      setLoginError("")
+    } else {
+      setLoginError("Incorrect password. Please try again.")
+    }
+  }
 
   const tabs = [
     { id: "dashboard", name: "Dashboard", icon: Home },
@@ -116,6 +176,28 @@ export default function AdminPanel() {
     })
   }
 
+  const handleChangePassword = () => {
+    if (currentPassword !== adminPassword) {
+      toast({ title: "Error", description: "Current password is incorrect.", variant: "destructive" })
+      return
+    }
+    if (!newPassword || newPassword !== confirmPassword) {
+      toast({ title: "Error", description: "New passwords do not match.", variant: "destructive" })
+      return
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "Error", description: "Password must be at least 6 characters.", variant: "destructive" })
+      return
+    }
+
+    setAdminPassword(newPassword)
+    toast({ title: "Success", description: "Admin password has been changed successfully." })
+    // Clear fields
+    setCurrentPassword("")
+    setNewPassword("")
+    setConfirmPassword("")
+  }
+
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -130,7 +212,6 @@ export default function AdminPanel() {
             <p className="text-xs text-green-400">+12% from last month</p>
           </CardContent>
         </Card>
-
         <Card className="glass border-white/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-white/80">Total Orders</CardTitle>
@@ -141,7 +222,6 @@ export default function AdminPanel() {
             <p className="text-xs text-green-400">+8% from last month</p>
           </CardContent>
         </Card>
-
         <Card className="glass border-white/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-white/80">Customers</CardTitle>
@@ -152,7 +232,6 @@ export default function AdminPanel() {
             <p className="text-xs text-green-400">+15% from last month</p>
           </CardContent>
         </Card>
-
         <Card className="glass border-white/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-white/80">Revenue</CardTitle>
@@ -166,7 +245,6 @@ export default function AdminPanel() {
           </CardContent>
         </Card>
       </div>
-
       {/* Recent Orders */}
       <Card className="glass border-white/10">
         <CardHeader>
@@ -217,7 +295,6 @@ export default function AdminPanel() {
           Add Product
         </Button>
       </div>
-
       <Card className="glass border-white/10">
         <CardContent className="p-6">
           <div className="overflow-x-auto">
@@ -286,7 +363,6 @@ export default function AdminPanel() {
           </Button>
         </div>
       </div>
-
       <Card className="glass border-white/10">
         <CardContent className="p-6">
           <div className="overflow-x-auto">
@@ -344,7 +420,6 @@ export default function AdminPanel() {
           <p className="text-white/60">Manage customer accounts</p>
         </div>
       </div>
-
       <Card className="glass border-white/10">
         <CardContent className="p-6">
           <div className="overflow-x-auto">
@@ -395,7 +470,6 @@ export default function AdminPanel() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="glass border-white/10">
           <CardHeader>
             <CardTitle className="text-white">Top Products</CardTitle>
@@ -424,7 +498,6 @@ export default function AdminPanel() {
         <h2 className="text-2xl font-bold text-white">Settings</h2>
         <p className="text-white/60">Configure your store settings</p>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="glass border-white/10">
           <CardHeader>
@@ -432,16 +505,18 @@ export default function AdminPanel() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-white/80 text-sm">Store Name</label>
-              <input
+              <Label htmlFor="storeName" className="text-white/80 text-sm">Store Name</Label>
+              <Input
+                id="storeName"
                 type="text"
                 defaultValue="Glamour Pakistan"
                 className="w-full mt-1 px-3 py-2 glass border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
             <div>
-              <label className="text-white/80 text-sm">Store Description</label>
+              <Label htmlFor="storeDescription" className="text-white/80 text-sm">Store Description</Label>
               <textarea
+                id="storeDescription"
                 defaultValue="Premium Pakistani fashion and accessories"
                 className="w-full mt-1 px-3 py-2 glass border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 rows={3}
@@ -449,7 +524,6 @@ export default function AdminPanel() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="glass border-white/10">
           <CardHeader>
             <CardTitle className="text-white">Payment Settings</CardTitle>
@@ -467,6 +541,46 @@ export default function AdminPanel() {
               <span className="text-white/80">Bank Transfer</span>
               <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Pending</Badge>
             </div>
+          </CardContent>
+        </Card>
+        <Card className="glass border-white/10">
+          <CardHeader>
+            <CardTitle className="text-white">Change Admin Password</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full mt-1 px-3 py-2 glass border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div>
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full mt-1 px-3 py-2 glass border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div>
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full mt-1 px-3 py-2 glass border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <Button onClick={handleChangePassword} className="primary-button">
+              Save Password
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -490,6 +604,10 @@ export default function AdminPanel() {
       default:
         return renderDashboard()
     }
+  }
+
+  if (!isAdminAuthenticated) {
+    return <AdminLogin onLogin={handleAdminLogin} error={loginError} />
   }
 
   return (
@@ -616,4 +734,4 @@ export default function AdminPanel() {
       </div>
     </div>
   )
-}
+        }
